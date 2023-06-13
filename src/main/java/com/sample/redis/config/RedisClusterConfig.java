@@ -5,7 +5,9 @@ import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.redis.connection.RedisClusterConfiguration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.springframework.data.redis.connection.RedisPassword;
 import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
+import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.serializer.RedisSerializer;
@@ -21,19 +23,20 @@ public class RedisClusterConfig {
 	private RedisClusterConfigProperties clusterProperties;
 
 	@Bean
-	public RedisClusterConfiguration getClusterConfig() {
+	public RedisClusterConfiguration redisClusterConfiguration() {
 		RedisClusterConfiguration rcc = new RedisClusterConfiguration(clusterProperties.getNodes());
 		rcc.setMaxRedirects(clusterProperties.getMaxRedirects().intValue());
+		rcc.setPassword(RedisPassword.of("redis-pass".toCharArray()));
 		return rcc;
 	}
 
 	@Bean
-	public JedisConnectionFactory getConnectionFactory(RedisClusterConfiguration cluster) {
-		return new JedisConnectionFactory(cluster);
+	public RedisConnectionFactory redisConnectionFactory(RedisClusterConfiguration redisClusterConfiguration) {
+		return new LettuceConnectionFactory(redisClusterConfiguration);
 	}
 
 	@Bean
-	public RedisTemplate getRedisTemplate(JedisConnectionFactory factory) {
+	public RedisTemplate getRedisTemplate(RedisConnectionFactory factory) {
 		RedisTemplate redisTemplate = new RedisTemplate();
 		redisTemplate.setConnectionFactory(factory);
 		RedisSerializer<String> redisSerializer = new StringRedisSerializer();
